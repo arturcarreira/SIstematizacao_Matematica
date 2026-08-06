@@ -9,11 +9,12 @@ from minhastats import (
     media,
     mediana,
     moda,
+    percentil,
+    quartis,
     variancia_amostral,
     variancia_populacional,
 )
 
-# Tolerância numérica (1e-4) documentada conforme exigência do Módulo 1.
 # Serve para os testes não quebrarem por arredondamento do float.
 TOLERANCIA = 1e-4
 
@@ -27,7 +28,7 @@ def test_media():
 
 
 def test_mediana():
-    # Tem que testar par e ímpar porque a lógica de achar o meio muda
+    # Tem que testar par e ímpar porque a lógica de achar o meio é diferente
     dados_impar = [10, 12, 12, 14, 18]
     dados_par = [2, 4, 6, 8]
     
@@ -43,9 +44,17 @@ def test_moda():
     assert moda(dados) == esperado
 
 
+def test_moda_com_empate():
+    dados = [3, 3, 2, 2, 5]
+    # Em caso de empate, pega o menor valor
+    esperado = stats.mode(dados)[0]
+
+    assert moda(dados) == esperado
+
+
 def test_amplitude():
     dados = [10, 12, 12, 14, 18]
-    # ptp = peak to peak (é a função de amplitude no numpy)
+    # ptp = peak to peak
     esperado = np.ptp(dados)
     
     assert amplitude(dados) == esperado
@@ -80,12 +89,28 @@ def test_desvio_padrao_amostral():
     
     assert desvio_padrao_amostral(dados) == pytest.approx(esperado, abs=TOLERANCIA)
 
-def test_moda_com_empate():
-    dados = [3, 3, 2, 2, 5]
 
-    esperado = stats.mode(
-        dados,
-        keepdims=False
-    ).mode
+def test_percentil():
+    dados = [10, 12, 12, 14, 18]
+    # Testando percentis contra o numpy
+    assert percentil(dados, 25) == pytest.approx(np.percentile(dados, 25), abs=TOLERANCIA)
+    assert percentil(dados, 70) == pytest.approx(np.percentile(dados, 70), abs=TOLERANCIA)
 
-    assert moda(dados) == esperado
+
+def test_quartis():
+    dados = [10, 12, 12, 14, 18]
+    resultado = quartis(dados)
+    
+    # Valida se o dicionário gerado bate com os percentis 25, 50 e 75
+    assert resultado["Q1"] == pytest.approx(np.percentile(dados, 25), abs=TOLERANCIA)
+    assert resultado["Q2"] == pytest.approx(np.percentile(dados, 50), abs=TOLERANCIA)
+    assert resultado["Q3"] == pytest.approx(np.percentile(dados, 75), abs=TOLERANCIA)
+
+
+def test_percentil_invalido():
+    dados = [10, 12, 14]
+    # Garante que a trava de segurança barra valores errados
+    with pytest.raises(ValueError):
+        percentil(dados, -1)
+    with pytest.raises(ValueError):
+        percentil(dados, 101)

@@ -84,3 +84,37 @@ def desvio_padrao_populacional(valores):
 
 def desvio_padrao_amostral(valores):
     return sqrt(variancia_amostral(valores))
+
+def percentil(valores, p):
+    # Trava básica pra evitar percentual errado
+    if not (0 <= p <= 100):
+        raise ValueError("O percentual tem que ser de 0 a 100")
+
+    dados = sorted(valores)
+    n = len(dados)
+    
+    # Fórmula da posição
+    pos = (n - 1) * (p / 100)
+    
+    idx_inf = int(pos)
+    idx_sup = idx_inf + 1
+
+    # Se caiu exatamente no último índice da lista, retorna ele direto
+    if idx_sup >= n:
+        return dados[idx_inf]
+
+    # Interpolação entre os dois valores mais próximos
+    decimal = pos - idx_inf
+    v_inf = dados[idx_inf]
+    v_sup = dados[idx_sup]
+
+    return v_inf + (v_sup - v_inf) * decimal
+
+
+def quartis(valores):
+    # Q1 (25%), Q2/Mediana (50%), Q3 (75%)
+    return {
+        "Q1": percentil(valores, 25),
+        "Q2": percentil(valores, 50),
+        "Q3": percentil(valores, 75)
+    }
