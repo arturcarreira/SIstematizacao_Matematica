@@ -1,3 +1,6 @@
+
+from math import sqrt
+
 def media(valores):
     soma = 0
     for v in valores:
@@ -17,6 +20,7 @@ def mediana(valores):
 
 def moda(valores):
     freq = {}
+
     for v in valores:
         if v in freq:
             freq[v] += 1
@@ -29,6 +33,9 @@ def moda(valores):
     for chave, quantidade in freq.items():
         if quantidade > maior_frequencia:
             maior_frequencia = quantidade
+            resultado = chave
+
+        elif quantidade == maior_frequencia and chave < resultado:
             resultado = chave
 
     return resultado
@@ -44,3 +51,36 @@ def amplitude(valores):
             maior = v
 
     return maior - menor
+
+
+def variancia_populacional(valores):
+    m = media(valores)
+    soma_desvios = 0
+    
+    for v in valores:
+        soma_desvios += (v - m) ** 2
+
+    return soma_desvios / len(valores)
+
+
+def variancia_amostral(valores):
+    if len(valores) < 2:
+        raise ValueError(
+            "A variância amostral exige pelo menos dois valores."
+        )
+
+    m = media(valores)
+    soma_desvios = 0
+
+    for v in valores:
+        soma_desvios += (v - m) ** 2
+
+    return soma_desvios / (len(valores) - 1)
+
+
+def desvio_padrao_populacional(valores):
+    return sqrt(variancia_populacional(valores))
+
+
+def desvio_padrao_amostral(valores):
+    return sqrt(variancia_amostral(valores))
