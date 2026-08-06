@@ -13,6 +13,9 @@ from minhastats import (
     quartis,
     variancia_amostral,
     variancia_populacional,
+    coeficiente_variacao,
+    covariancia,
+    correlacao_pearson,
 )
 
 # Serve para os testes não quebrarem por arredondamento do float.
@@ -114,3 +117,28 @@ def test_percentil_invalido():
         percentil(dados, -1)
     with pytest.raises(ValueError):
         percentil(dados, 101)
+
+
+def test_coeficiente_variacao():
+    dados = [10, 12, 12, 14, 18]
+    esperado = (np.std(dados, ddof=1) / np.mean(dados)) * 100
+    
+    assert coeficiente_variacao(dados) == pytest.approx(esperado, abs=TOLERANCIA)
+
+
+def test_covariancia():
+    x, y = [18, 25, 30, 40, 50], [2000, 3500, 4200, 6000, 8500]
+    
+    # ddof=1 pra calcular a covariância amostral igual a nossa função
+    esperado = np.cov(x, y, ddof=1)[0][1]
+    
+    assert covariancia(x, y) == pytest.approx(esperado, abs=TOLERANCIA)
+
+
+def test_correlacao_pearson():
+    x, y = [18, 25, 30, 40, 50], [2000, 3500, 4200, 6000, 8500]
+    
+    # O corrcoef retorna uma matriz, a correlação x-y está na posição [0][1]
+    esperado = np.corrcoef(x, y)[0][1]
+    
+    assert correlacao_pearson(x, y) == pytest.approx(esperado, abs=TOLERANCIA)

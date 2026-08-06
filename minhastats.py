@@ -1,4 +1,3 @@
-
 from math import sqrt
 
 def media(valores):
@@ -118,3 +117,42 @@ def quartis(valores):
         "Q2": percentil(valores, 50),
         "Q3": percentil(valores, 75)
     }
+
+def coeficiente_variacao(valores):
+    m = media(valores)
+
+    # O coeficiente de variação não existe quando a média é zero
+    if m == 0:
+        raise ValueError(
+            "Não é possível calcular o coeficiente de variação com média zero."
+        )
+
+    desvio = desvio_padrao_amostral(valores)
+
+    return (desvio / m) * 100
+
+def covariancia(x, y):
+    # As listas precisam ter o mesmo tamanho e pelo menos 2 elementos
+    if len(x) != len(y):
+        raise ValueError("Listas com tamanhos diferentes!")
+    if len(x) < 2:
+        raise ValueError("Precisa de pelo menos 2 valores.")
+
+    mx, my = media(x), media(y)
+    soma = 0
+
+    for i in range(len(x)):
+        soma += (x[i] - mx) * (y[i] - my)
+
+
+    return soma / (len(x) - 1)
+
+def correlacao_pearson(x, y):
+    dx = desvio_padrao_amostral(x)
+    dy = desvio_padrao_amostral(y)
+
+    
+    if dx == 0 or dy == 0:
+        raise ValueError("É preciso variação nos dados para calcular a correlação.")
+
+    return covariancia(x, y) / (dx * dy)
