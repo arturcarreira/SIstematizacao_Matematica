@@ -1,5 +1,6 @@
 import os
 
+import random
 import pandas as pd
 import plotly.express as px
 import streamlit as st
@@ -59,7 +60,8 @@ menu = st.sidebar.radio(
     [
         "Visão geral",
         "Análise numérica",
-        "Análise categórica"
+        "Análise categórica",
+        "Probabilidade e simulação"
     ]
 )
 
@@ -342,7 +344,7 @@ elif menu == "Análise numérica":
         f"(coeficiente de assimetria de Pearson: {assimetria:.2f})"
     )
 
-else:
+elif menu == "Análise categórica":
     st.header("Análise de variáveis categóricas")
 
     nomes = {
@@ -431,4 +433,132 @@ else:
         f"**{mais_frequente['Categoria']}**, com "
         f"**{mais_frequente['Quantidade']} registros** "
         f"({mais_frequente['Percentual']:.2f}% da base)."
+    )
+else:
+    st.header("Probabilidade e simulação")
+
+    nomes_num = {
+        "age": "Idade",
+        "bmi": "IMC",
+        "children": "Filhos",
+        "charges": "Custos"
+    }
+
+    coluna = st.selectbox(
+        "Escolha uma variável:",
+        list(nomes_num.keys()),
+        index=3,
+        format_func=nomes_num.get
+    )
+
+    valores = df[coluna].tolist()
+
+    # Lei dos Grandes Números
+    st.subheader("Lei dos Grandes Números")
+
+    st.write(
+        "A simulação sorteia valores da base e acompanha a média "
+        "conforme a quantidade de sorteios aumenta."
+    )
+
+    quantidade = st.slider(
+        "Quantidade de sorteios:",
+        100,
+        5000,
+        1000,
+        100
+    )
+
+    sorteados = []
+    medias_acumuladas = []
+
+    for i in range(quantidade):
+        valor = random.choice(valores)
+        sorteados.append(valor)
+
+        medias_acumuladas.append(
+            media(sorteados)
+        )
+
+    media_real = media(valores)
+
+    simulacao = pd.DataFrame({
+        "Sorteio": range(1, quantidade + 1),
+        "Média acumulada": medias_acumuladas
+    })
+
+    grafico_lgn = px.line(
+        simulacao,
+        x="Sorteio",
+        y="Média acumulada",
+        title="Convergência da média"
+    )
+
+    grafico_lgn.add_hline(
+        y=media_real,
+        line_dash="dash",
+        annotation_text="Média da base"
+    )
+
+    st.plotly_chart(
+        grafico_lgn,
+        width="stretch"
+    )
+
+    st.write(
+        f"Média da base: **{media_real:.2f}** | "
+        f"Média após os sorteios: **{medias_acumuladas[-1]:.2f}**"
+    )
+
+
+    # Teorema Central do Limite
+    st.subheader("Teorema Central do Limite")
+
+    tamanho_amostra = st.slider(
+        "Tamanho de cada amostra:",
+        5,
+        100,
+        30,
+        5
+    )
+
+    repeticoes = st.slider(
+        "Número de repetições:",
+        100,
+        2000,
+        500,
+        100
+    )
+
+    medias_amostrais = []
+
+    for i in range(repeticoes):
+        amostra = random.choices(
+            valores,
+            k=tamanho_amostra
+        )
+
+        medias_amostrais.append(
+            media(amostra)
+        )
+
+    resultado = pd.DataFrame({
+        "Médias amostrais": medias_amostrais
+    })
+
+    grafico_tcl = px.histogram(
+        resultado,
+        x="Médias amostrais",
+        nbins=30,
+        title="Distribuição das médias amostrais"
+    )
+
+    st.plotly_chart(
+        grafico_tcl,
+        width="stretch"
+    )
+
+    st.write(
+        "Ao aumentar o tamanho das amostras, a distribuição das médias "
+        "tende a ficar mais próxima de uma distribuição Normal."
     )    
