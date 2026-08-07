@@ -58,7 +58,8 @@ menu = st.sidebar.radio(
     "Navegação",
     [
         "Visão geral",
-        "Análise numérica"
+        "Análise numérica",
+        "Análise categórica"
     ]
 )
 
@@ -92,7 +93,7 @@ if menu == "Visão geral":
 
 
 # Página de análise numérica
-else:
+elif menu == "Análise numérica":
     st.header("Explorando variáveis numéricas")
 
     # Tradução dos nomes das colunas
@@ -340,3 +341,94 @@ else:
         f"{texto} "
         f"(coeficiente de assimetria de Pearson: {assimetria:.2f})"
     )
+
+else:
+    st.header("Análise de variáveis categóricas")
+
+    nomes = {
+        "sex": "Sexo",
+        "smoker": "Fumante",
+        "region": "Região"
+    }
+
+    coluna = st.selectbox(
+        "Escolha uma variável:",
+        list(nomes.keys()),
+        format_func=nomes.get
+    )
+    
+    traducao = {
+        "male": "Masculino",
+        "female": "Feminino",
+        "yes": "Sim",
+        "no": "Não",
+        "southeast": "Sudeste",
+        "southwest": "Sudoeste",
+        "northwest": "Noroeste",
+        "northeast": "Nordeste"
+    }
+
+    # Conta quantas vezes cada categoria aparece
+    contagem = df[coluna].value_counts()
+
+    tabela = pd.DataFrame({
+        "Categoria": contagem.index,
+        "Quantidade": contagem.values
+    })
+
+    tabela["Categoria"] = tabela["Categoria"].replace(traducao)
+
+
+    # Calcula o percentual de cada categoria
+    tabela["Percentual"] = (
+        tabela["Quantidade"] / len(df) * 100
+    ).round(2)
+
+    st.subheader("Tabela de frequências")
+
+    st.dataframe(
+        tabela,
+        hide_index=True,
+        width="stretch"
+    )
+
+    # Gráficos
+    st.subheader("Gráficos")
+
+    c1, c2 = st.columns(2)
+
+    grafico_barras = px.bar(
+        tabela,
+        x="Categoria",
+        y="Quantidade",
+        title=f"Quantidade por {nomes[coluna]}"
+    )
+
+    grafico_pizza = px.pie(
+        tabela,
+        names="Categoria",
+        values="Quantidade",
+        title=f"Distribuição por {nomes[coluna]}"
+    )
+
+    c1.plotly_chart(
+        grafico_barras,
+        width="stretch"
+    )
+
+    c2.plotly_chart(
+        grafico_pizza,
+        width="stretch"
+    )
+
+    # Mostra a categoria que mais aparece
+    mais_frequente = tabela.iloc[0]
+
+    st.subheader("Resumo")
+
+    st.write(
+        f"A categoria que mais aparece é "
+        f"**{mais_frequente['Categoria']}**, com "
+        f"**{mais_frequente['Quantidade']} registros** "
+        f"({mais_frequente['Percentual']:.2f}% da base)."
+    )    
