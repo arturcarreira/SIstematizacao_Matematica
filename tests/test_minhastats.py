@@ -16,6 +16,11 @@ from minhastats import (
     coeficiente_variacao,
     covariancia,
     correlacao_pearson,
+    densidade_exponencial,
+    densidade_normal,
+    regressao_linear,
+    r_quadrado,
+    prever_regressao,
 )
 
 # Serve para os testes não quebrarem por arredondamento do float.
@@ -142,3 +147,79 @@ def test_correlacao_pearson():
     esperado = np.corrcoef(x, y)[0][1]
     
     assert correlacao_pearson(x, y) == pytest.approx(esperado, abs=TOLERANCIA)
+
+
+
+def test_densidade_normal():
+    x = 10
+    media_valor = 12
+    desvio = 3
+
+    esperado = stats.norm.pdf(
+        x,
+        loc=media_valor,
+        scale=desvio
+    )
+
+    assert densidade_normal(
+        x,
+        media_valor,
+        desvio
+    ) == pytest.approx(esperado, abs=TOLERANCIA)
+
+
+def test_densidade_exponencial():
+    x = 10
+    taxa = 0.2
+
+    esperado = stats.expon.pdf(
+        x,
+        scale=1 / taxa
+    )
+
+    assert densidade_exponencial(
+        x,
+        taxa
+    ) == pytest.approx(esperado, abs=TOLERANCIA)
+
+def test_regressao_linear():
+    x = [1, 2, 3, 4, 5]
+    y = [2, 4, 5, 4, 5]
+
+    resultado = stats.linregress(x, y)
+
+    intercepto, inclinacao = regressao_linear(x, y)
+
+    assert intercepto == pytest.approx(
+        resultado.intercept,
+        abs=TOLERANCIA
+    )
+
+    assert inclinacao == pytest.approx(
+        resultado.slope,
+        abs=TOLERANCIA
+    )
+
+
+def test_r_quadrado():
+    x = [1, 2, 3, 4, 5]
+    y = [2, 4, 5, 4, 5]
+
+    resultado = stats.linregress(x, y)
+
+    esperado = resultado.rvalue ** 2
+
+    assert r_quadrado(x, y) == pytest.approx(
+        esperado,
+        abs=TOLERANCIA
+    )
+
+
+def test_prever_regressao():
+    resultado = prever_regressao(
+        10,
+        5,
+        2
+    )
+
+    assert resultado == 25

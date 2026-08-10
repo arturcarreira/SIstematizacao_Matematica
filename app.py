@@ -14,6 +14,12 @@ from minhastats import (
     moda,
     quartis,
     variancia_amostral,
+    densidade_exponencial,
+    densidade_normal,
+    correlacao_pearson,
+    prever_regressao,
+    r_quadrado,
+    regressao_linear,
 )
 
 
@@ -61,7 +67,9 @@ menu = st.sidebar.radio(
         "Visão geral",
         "Análise numérica",
         "Análise categórica",
-        "Probabilidade e simulação"
+        "Probabilidade e simulação",
+        "Distribuições teóricas",
+        "Correlação e regressão"
     ]
 )
 
@@ -434,7 +442,7 @@ elif menu == "Análise categórica":
         f"**{mais_frequente['Quantidade']} registros** "
         f"({mais_frequente['Percentual']:.2f}% da base)."
     )
-else:
+elif menu == "Probabilidade e simulação":
     st.header("Probabilidade e simulação")
 
     nomes_num = {
@@ -562,3 +570,263 @@ else:
         "Ao aumentar o tamanho das amostras, a distribuição das médias "
         "tende a ficar mais próxima de uma distribuição Normal."
     )    
+
+elif menu == "Distribuições teóricas":
+    st.header("Distribuições teóricas")
+
+    st.write(
+        "Comparação da distribuição dos custos com "
+        "uma distribuição Normal e uma Exponencial."
+    )
+
+    dados = df["charges"].tolist()
+
+    media_custos = media(dados)
+    desvio_custos = desvio_padrao_amostral(dados)
+
+    # Parâmetro lambda da distribuição Exponencial
+    taxa = 1 / media_custos
+
+    menor = min(dados)
+    maior = max(dados)
+
+    quantidade_pontos = 200
+    passo = (maior - menor) / quantidade_pontos
+
+    valores_x = []
+    normal_y = []
+    exponencial_y = []
+
+    for i in range(quantidade_pontos + 1):
+        x = menor + i * passo
+
+        valores_x.append(x)
+
+        normal_y.append(
+            densidade_normal(
+                x,
+                media_custos,
+                desvio_custos
+            )
+        )
+
+        exponencial_y.append(
+            densidade_exponencial(
+                x,
+                taxa
+            )
+        )
+
+    st.subheader("Comparação das distribuições")
+
+    grafico = px.histogram(
+        df,
+        x="charges",
+        nbins=25,
+        histnorm="probability density",
+        labels={
+            "charges": "Custos"
+        },
+        title="Custos e distribuições teóricas"
+    )
+
+    grafico.add_scatter(
+        x=valores_x,
+        y=normal_y,
+        mode="lines",
+        name="Normal"
+    )
+
+    grafico.add_scatter(
+        x=valores_x,
+        y=exponencial_y,
+        mode="lines",
+        name="Exponencial"
+    )
+
+    grafico.update_yaxes(
+    title="Densidade"
+    )
+
+    st.plotly_chart(
+        grafico,
+        width="stretch"
+    )
+
+    st.subheader("Parâmetros utilizados")
+
+    st.write(
+        f"Média dos custos: **{media_custos:.2f}**"
+    )
+
+    st.write(
+        f"Desvio padrão: **{desvio_custos:.2f}**"
+    )
+
+    st.write(
+        f"Taxa da distribuição Exponencial: **{taxa:.6f}**"
+    )
+
+elif menu == "Correlação e regressão":
+    st.header("Correlação e regressão linear")
+
+    st.write(
+        "Escolha duas variáveis numéricas para analisar "
+        "a relação entre elas."
+    )
+
+    nomes_num = {
+        "age": "Idade",
+        "bmi": "IMC",
+        "children": "Filhos",
+        "charges": "Custos"
+    }
+
+    c1, c2 = st.columns(2)
+
+    coluna_x = c1.selectbox(
+        "Variável X:",
+        list(nomes_num.keys()),
+        index=0,
+        format_func=nomes_num.get
+    )
+
+    coluna_y = c2.selectbox(
+        "Variável Y:",
+        list(nomes_num.keys()),
+        index=3,
+        format_func=nomes_num.get
+    )
+
+    if coluna_x == coluna_y:
+        st.warning(
+            "Escolha duas variáveis diferentes."
+        )
+
+    else:
+        x = df[coluna_x].tolist()
+        y = df[coluna_y].tolist()
+
+        correlacao = correlacao_pearson(x, y)
+
+        intercepto, inclinacao = regressao_linear(
+            x,
+            y
+        )
+
+        r2 = r_quadrado(x, y)
+
+        st.subheader("Resultados")
+
+        c1, c2 = st.columns(2)
+
+        c1.metric(
+            "Correlação de Pearson",
+            f"{correlacao:.4f}"
+        )
+
+        c2.metric(
+            "R²",
+            f"{r2:.4f}"
+        )
+
+        st.write(
+            f"Equação da reta: "
+            f"**Y = {intercepto:.2f} + "
+            f"{inclinacao:.2f}X**"
+        )
+
+        st.subheader("Interpretação")
+        
+        if inclinacao > 0:
+            st.write(
+                f"A cada aumento de 1 unidade em {nomes_num[coluna_x]}, "
+                f"o valor previsto de {nomes_num[coluna_y]} aumenta "
+                f"aproximadamente {inclinacao:.2f}."
+            )
+        
+        elif inclinacao < 0:
+            st.write(
+                f"A cada aumento de 1 unidade em {nomes_num[coluna_x]}, "
+                f"o valor previsto de {nomes_num[coluna_y]} diminui "
+                f"aproximadamente {abs(inclinacao):.2f}."
+            )
+        
+        else:
+            st.write(
+                "A reta não apresenta variação entre as duas variáveis."
+            )
+        
+        st.caption(
+            "Correlação indica associação entre as variáveis, "
+            "mas não significa que uma causa a outra."
+        )
+
+        # Gráfico de dispersão
+        grafico = px.scatter(
+            df,
+            x=coluna_x,
+            y=coluna_y,
+            labels={
+                coluna_x: nomes_num[coluna_x],
+                coluna_y: nomes_num[coluna_y]
+            },
+            title=(
+                f"{nomes_num[coluna_x]} "
+                f"x {nomes_num[coluna_y]}"
+            )
+        )
+
+        # Valores da reta de regressão
+        valores_x = sorted(
+            set(x)
+        )
+
+        valores_y = []
+
+        for valor in valores_x:
+            previsao = prever_regressao(
+                valor,
+                intercepto,
+                inclinacao
+            )
+
+            valores_y.append(
+                previsao
+            )
+
+        grafico.add_scatter(
+            x=valores_x,
+            y=valores_y,
+            mode="lines",
+            name="Regressão linear"
+        )
+
+        st.plotly_chart(
+            grafico,
+            width="stretch"
+        )
+
+        # Previsão interativa
+        st.subheader("Previsão")
+
+        valor_digitado = st.text_input(
+            f"Informe um valor para {nomes_num[coluna_x]}:",
+            value=f"{media(x):.2f}"
+        )
+        
+        valor_x = float(
+            valor_digitado.replace(",", ".")
+        )
+        
+        previsao = prever_regressao(
+            valor_x,
+            intercepto,
+            inclinacao
+        )
+        
+        st.write(
+            f"Valor previsto de "
+            f"**{nomes_num[coluna_y]}**: "
+            f"**{previsao:.2f}**"
+        )

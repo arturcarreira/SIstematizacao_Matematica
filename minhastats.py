@@ -1,4 +1,4 @@
-from math import sqrt
+from math import exp, pi, sqrt
 
 def media(valores):
     soma = 0
@@ -156,3 +156,51 @@ def correlacao_pearson(x, y):
         raise ValueError("É preciso variação nos dados para calcular a correlação.")
 
     return covariancia(x, y) / (dx * dy)
+
+
+def densidade_normal(x, media_valor, desvio):
+    parte1 = 1 / (desvio * sqrt(2 * pi))
+    parte2 = exp(
+        -((x - media_valor) ** 2)
+        / (2 * desvio ** 2)
+    )
+
+    return parte1 * parte2
+
+
+def densidade_exponencial(x, taxa):
+    if x < 0:
+        return 0
+
+    return taxa * exp(-taxa * x)
+
+def regressao_linear(x, y):
+    inclinacao = covariancia(x, y) / variancia_amostral(x)
+
+    intercepto = (
+        media(y)
+        - inclinacao * media(x)
+    )
+
+    return intercepto, inclinacao
+
+
+def r_quadrado(x, y):
+    intercepto, inclinacao = regressao_linear(x, y)
+
+    media_y = media(y)
+
+    soma_total = 0
+    soma_erros = 0
+
+    for i in range(len(x)):
+        previsto = intercepto + inclinacao * x[i]
+
+        soma_total += (y[i] - media_y) ** 2
+        soma_erros += (y[i] - previsto) ** 2
+
+    return 1 - (soma_erros / soma_total)
+
+
+def prever_regressao(x, intercepto, inclinacao):
+    return intercepto + inclinacao * x
