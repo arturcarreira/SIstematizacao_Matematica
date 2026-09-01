@@ -434,6 +434,51 @@ elif menu == "Análise categórica":
     # Mostra a categoria que mais aparece
     mais_frequente = tabela.iloc[0]
 
+    # Comparação dos custos entre fumantes e não fumantes para analise da descoberta 3
+    if coluna == "smoker":
+        st.subheader("Comparação dos custos")
+
+        custos_fumantes = df[
+            df["smoker"] == "yes"
+        ]["charges"].tolist()
+
+        custos_nao_fumantes = df[
+            df["smoker"] == "no"
+        ]["charges"].tolist()
+
+        media_fumantes = media(custos_fumantes)
+        media_nao_fumantes = media(custos_nao_fumantes)
+
+        comparacao = pd.DataFrame({
+            "Categoria": [
+                "Fumante",
+                "Não fumante"
+            ],
+            "Custo médio": [
+                media_fumantes,
+                media_nao_fumantes
+            ]
+        })
+
+        st.dataframe(
+            comparacao,
+            hide_index=True,
+            width="stretch"
+        )
+
+        grafico_custos = px.bar(
+            comparacao,
+            x="Categoria",
+            y="Custo médio",
+            title="Custo médio por tabagismo"
+        )
+
+        st.plotly_chart(
+            grafico_custos,
+            width="stretch"
+        )
+
+    # Resumo
     st.subheader("Resumo")
 
     st.write(
@@ -442,6 +487,13 @@ elif menu == "Análise categórica":
         f"**{mais_frequente['Quantidade']} registros** "
         f"({mais_frequente['Percentual']:.2f}% da base)."
     )
+
+    if coluna == "smoker":
+        st.write(
+            f"O custo médio dos fumantes é de "
+            f"**{media_fumantes:.2f}**, enquanto o custo médio "
+            f"dos não fumantes é de **{media_nao_fumantes:.2f}**."
+        )
 elif menu == "Probabilidade e simulação":
     st.header("Probabilidade e simulação")
 
